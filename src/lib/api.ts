@@ -1,10 +1,10 @@
-export interface PlayerOut {
+export type PlayerOut = {
   id: number
   name: string
   created_at: string
 }
 
-export interface LeaderboardEntry {
+export type LeaderboardEntry = {
   player_id: number
   player_name: string
   wins: number
@@ -12,17 +12,17 @@ export interface LeaderboardEntry {
   win_rate: number
 }
 
-export interface GameOut {
+export type GameOut = {
   id: number
   name: string
   created_at: string
 }
 
-export interface GameCreate {
+export type GameCreate = {
   name: string
 }
 
-const API_BASE = "http://ltmits184:8000"
+const API_BASE = process.env.API_BASE || ""
 
 class ApiError extends Error {
   status: number
@@ -85,7 +85,7 @@ export function getLeaderboard(gameId?: number): Promise<LeaderboardEntry[]> {
 }
 
 // Match API types
-export interface MatchResponse {
+export type MatchResponse = {
   id: number
   game: GameOut
   winner: PlayerOut | null
@@ -98,7 +98,7 @@ export function getMatches(): Promise<MatchResponse[]> {
   return request<MatchResponse[]>("/matches")
 }
 
-export interface CreateMatchRequest {
+export type CreateMatchRequest = {
   game_id: number
   player_ids: number[]
   winner_id?: number | null
