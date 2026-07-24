@@ -5,7 +5,10 @@ import {
   GameOut,
   LeaderboardEntry,
   MatchResponse,
+  PlayerLogin,
   PlayerOut,
+  PlayerRegister,
+  TokenOut,
 } from "./types";
 
 const API_BASE = process.env.API_BASE || "";
@@ -19,10 +22,22 @@ class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
+type RequestOptions = RequestInit & { token?: string };
+
+async function request<T>(path: string, options?: RequestOptions): Promise<T> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (options?.token) {
+    headers["Authorization"] = `Bearer ${options.token}`;
+  }
+
+  const { token, ...fetchOptions } = options ?? {};
+
   const res = await fetch(`${API_BASE}${path}`, {
-    headers: { "Content-Type": "application/json" },
-    ...options,
+    headers,
+    ...fetchOptions,
   });
   if (!res.ok) {
     const body = await res.text().catch(() => "");
@@ -32,48 +47,83 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export async function getPlayers(): Promise<PlayerOut[]> {
-  return request<PlayerOut[]>("/players");
+// ── Auth ──────────────────────────────────────────────
+
+export async function loginApi(
+  data: PlayerLogin,
+): Promise<TokenOut> {
+  return request<TokenOut>("/auth/login", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
 }
 
-export async function createPlayer(name: string): Promise<PlayerOut> {
+export async function registerApi(
+  data: PlayerRegister,
+): Promise<TokenOut> {
+  return request<TokenOut>("/auth/register", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function getMe(token: string): Promise<PlayerOut> {
+  return request<PlayerOut>("/auth/me", { token });
+}
+
+// ── Players ───────────────────────────────────────────
+
+export async function getPlayers(token?: string): Promise<PlayerOut[]> {
+  return request<PlayerOut[]>("/players", { token });
+}
+
+export async function createPlayer(name: string, token?: string): Promise<PlayerOut> {
   return request<PlayerOut>("/players", {
     method: "POST",
     body: JSON.stringify({ name }),
+    token,
   });
 }
 
-export async function deletePlayer(id: number): Promise<void> {
-  return request<void>(`/players/${id}`, { method: "DELETE" });
+export async function deletePlayer(id: number, token?: string): Promise<void> {
+  return request<void>(`/players/${id}`, { method: "DELETE", token });
 }
 
-export async function getGames(): Promise<GameOut[]> {
-  return request<GameOut[]>("/games");
+// ── Games ─────────────────────────────────────────────
+
+export async function getGames(token?: string): Promise<GameOut[]> {
+  return request<GameOut[]>("/games", { token });
 }
 
-export async function createGame(name: string): Promise<GameOut> {
+export async function createGame(name: string, token?: string): Promise<GameOut> {
   return request<GameOut>("/games", {
     method: "POST",
     body: JSON.stringify({ name }),
+    token,
   });
 }
 
-export async function deleteGame(id: number): Promise<void> {
-  return request<void>(`/games/${id}`, { method: "DELETE" });
+export async function deleteGame(id: number, token?: string): Promise<void> {
+  return request<void>(`/games/${id}`, { method: "DELETE", token });
 }
 
-export async function getLeaderboard(gameId?: number): Promise<LeaderboardEntry[]> {
+// ── Leaderboard ───────────────────────────────────────
+
+export async function getLeaderboard(gameId?: number, token?: string): Promise<LeaderboardEntry[]> {
   const params = gameId !== undefined ? `?game_id=${gameId}` : "";
-  return request<LeaderboardEntry[]>(`/leaderboard${params}`);
+  return request<LeaderboardEntry[]>(`/leaderboard${params}`, { token });
 }
 
-export async function getMatches(): Promise<MatchResponse[]> {
-  return request<MatchResponse[]>("/matches");
+// ── Matches ───────────────────────────────────────────
+
+export async function getMatches(token?: string): Promise<MatchResponse[]> {
+  return request<MatchResponse[]>("/matches", { token });
 }
 
-export async function createMatch(data: CreateMatchRequest): Promise<MatchResponse> {
+export async function createMatch(data: CreateMatchRequest, token?: string): Promise<MatchResponse> {
   return request<MatchResponse>("/matches", {
     method: "POST",
     body: JSON.stringify(data),
+    token,
   });
 }

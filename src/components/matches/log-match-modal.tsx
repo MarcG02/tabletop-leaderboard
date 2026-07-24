@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { X, Loader2 } from "lucide-react"
 import { createMatch, getPlayers, getGames, createGame } from "@/lib/api"
+import { getStoredToken } from "@/lib/auth-store"
 import { PlayerAvatar } from "@/components/players/player-avatar"
 import type { PlayerOut, GameOut } from "@/lib/types"
 
@@ -24,8 +25,8 @@ export function LogMatchModal({
 }: LogMatchModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null)
   const [games, setGames] = useState<GameOut[]>([])
-  const [gamesLoading, setGamesLoading] = useState(false)
-  const [selectedGameId, setSelectedGameId] = useState<number | "new">("" as any)
+  const [gamesLoading, setGamesLoading] = useState(true)
+  const [selectedGameId, setSelectedGameId] = useState<number | "new" | "">("")
   const [newGameName, setNewGameName] = useState("")
   const [playedAt, setPlayedAt] = useState(getTodayStr())
   const [playerIds, setPlayerIds] = useState<number[]>([])
@@ -33,18 +34,17 @@ export function LogMatchModal({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [players, setPlayers] = useState<PlayerOut[]>([])
-  const [playersLoading, setPlayersLoading] = useState(false)
+  const [playersLoading, setPlayersLoading] = useState(true)
 
   // Fetch games and players when modal opens
   useEffect(() => {
     if (!open) return
 
-    setGamesLoading(true)
-    setPlayersLoading(true)
+    const token = getStoredToken()
 
     Promise.all([
-      getGames(),
-      getPlayers(),
+      getGames(token ?? undefined),
+      getPlayers(token ?? undefined),
     ])
       .then(([gamesData, playersData]) => {
         setGames(gamesData)
@@ -77,18 +77,6 @@ export function LogMatchModal({
     document.addEventListener("keydown", handleKeyDown)
     return () => document.removeEventListener("keydown", handleKeyDown)
   }, [open, onClose])
-
-  // Reset form when modal opens
-  useEffect(() => {
-    if (open) {
-      setSelectedGameId("" as any)
-      setNewGameName("")
-      setPlayedAt(getTodayStr())
-      setPlayerIds([])
-      setWinnerId(null)
-      setError(null)
-    }
-  }, [open])
 
   // Handle backdrop click
   const handleBackdropClick = (e: React.MouseEvent) => {
@@ -140,9 +128,11 @@ export function LogMatchModal({
     setError(null)
 
     try {
+      const token = getStoredToken()
+
       // If creating a new game, do that first
       if (selectedGameId === "new") {
-        const created = await createGame(newGameName.trim())
+        const created = await createGame(newGameName.trim(), token ?? undefined)
         gameId = created.id
       }
 
@@ -151,7 +141,7 @@ export function LogMatchModal({
         player_ids: playerIds,
         winner_id: winnerId,
         played_at: playedAt,
-      })
+      }, token ?? undefined)
 
       onMatchCreated()
       onClose()

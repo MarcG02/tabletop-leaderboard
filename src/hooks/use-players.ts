@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import type { Player } from "@/data/players"
 import { getPlayers, getLeaderboard } from "@/lib/api"
+import { getStoredToken } from "@/lib/auth-store"
 
 type UsePlayersReturn = {
   players: Player[]
@@ -21,10 +22,11 @@ export function usePlayers(): UsePlayersReturn {
     let cancelled = false
 
     async function load() {
+      const token = getStoredToken()
       try {
         const [playerList, leaderboard] = await Promise.all([
-          getPlayers(),
-          getLeaderboard(),
+          getPlayers(token ?? undefined),
+          getLeaderboard(undefined, token ?? undefined),
         ])
         if (cancelled) return
 

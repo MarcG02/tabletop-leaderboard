@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import type { Match } from "@/data/matches"
 import { getMatches } from "@/lib/api"
+import { getStoredToken } from "@/lib/auth-store"
 
 type UseMatchesReturn = {
   matches: Match[]
@@ -22,7 +23,8 @@ export function useMatches(): UseMatchesReturn {
 
     async function load() {
       try {
-        const data = await getMatches()
+        const token = getStoredToken()
+        const data = await getMatches(token ?? undefined)
         if (cancelled) return
         const mapped: Match[] = data.map((m) => ({
           id: m.id,

@@ -30,6 +30,22 @@ export type CreateMatchRequest = {
   notes?: string | null;
 };
 
+// Auth types
+export type PlayerLogin = {
+  name: string;
+  password: string;
+};
+
+export type PlayerRegister = {
+  name: string;
+  password: string;
+};
+
+export type TokenOut = {
+  token: string;
+  player: PlayerOut;
+};
+
 // Match API types
 export type MatchResponse = {
   id: number;

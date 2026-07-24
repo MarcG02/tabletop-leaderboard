@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import type { Game } from "@/data/games"
 import { getGames, getMatches, deleteGame } from "@/lib/api"
+import { getStoredToken } from "@/lib/auth-store"
 
 type UseGamesReturn = {
   games: Game[]
@@ -23,9 +24,10 @@ export function useGames(): UseGamesReturn {
 
     async function load() {
       try {
+        const token = getStoredToken()
         const [gameList, matches] = await Promise.all([
-          getGames(),
-          getMatches(),
+          getGames(token ?? undefined),
+          getMatches(token ?? undefined),
         ])
         if (cancelled) return
 
@@ -65,7 +67,8 @@ export function useGames(): UseGamesReturn {
 
   const deleteGameById = useCallback(
     async (id: number) => {
-      await deleteGame(id)
+      const token = getStoredToken()
+      await deleteGame(id, token ?? undefined)
       setGames((prev) => prev.filter((g) => g.id !== id))
     },
     [],

@@ -1,22 +1,23 @@
 "use client";
 
 import { type FormEvent, useState } from "react";
-import { Trophy, Eye, EyeOff } from "lucide-react";
+import { Trophy, Eye, EyeOff, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
 import { cn } from "@/lib/utils";
 
-type LoginScreenProps = {
-  onSwitchToRegister?: () => void;
+type RegisterScreenProps = {
+  onSwitchToLogin: () => void;
 };
 
-export function LoginScreen({ onSwitchToRegister }: LoginScreenProps) {
-  const { login } = useAuth();
+export function RegisterScreen({ onSwitchToLogin }: RegisterScreenProps) {
+  const { register } = useAuth();
   const { toggleTheme } = useTheme();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -24,11 +25,27 @@ export function LoginScreen({ onSwitchToRegister }: LoginScreenProps) {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (!username.trim() || !password.trim() || !confirmPassword.trim()) {
+      setError("All fields are required.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    if (password.length < 4) {
+      setError("Password must be at least 4 characters.");
+      return;
+    }
+
     setLoading(true);
 
-    const result = await login(username, password);
+    const result = await register(username, password);
     if (!result.success) {
-      setError(result.error ?? "Invalid credentials");
+      setError(result.error ?? "Registration failed.");
     }
     setLoading(false);
   }
@@ -47,7 +64,6 @@ export function LoginScreen({ onSwitchToRegister }: LoginScreenProps) {
         className="absolute top-4 right-4 size-9 flex items-center justify-center rounded-lg border bg-card text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
         aria-label="Toggle theme"
       >
-        {/* Both SVGs always present — CSS dark: variant controls visibility */}
         <svg
           className="size-4 hidden dark:block"
           fill="none"
@@ -76,35 +92,35 @@ export function LoginScreen({ onSwitchToRegister }: LoginScreenProps) {
         </svg>
       </button>
 
-      {/* ── Login Card ── */}
+      {/* ── Register Card ── */}
       <div className="relative w-full max-w-sm animate-in fade-in zoom-in-95">
         <div className="bg-card border rounded-2xl shadow-xl p-8">
           {/* ── Branding ── */}
           <div className="flex flex-col items-center mb-8">
             <div className="size-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center mb-4">
-              <Trophy className="size-7" />
+              <UserPlus className="size-7" />
             </div>
             <h1 className="text-2xl font-bold text-foreground">
-              Tabletop Tally
+              Create Account
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Winner&apos;s Circle
+              Join the Winner&apos;s Circle
             </p>
           </div>
 
           {/* ── Form ── */}
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <label
-                htmlFor="username"
+                htmlFor="reg-username"
                 className="text-sm font-medium text-foreground"
               >
                 Username
               </label>
               <Input
-                id="username"
+                id="reg-username"
                 type="text"
-                placeholder="Enter your username"
+                placeholder="Choose a username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 autoComplete="username"
@@ -115,19 +131,19 @@ export function LoginScreen({ onSwitchToRegister }: LoginScreenProps) {
 
             <div className="space-y-2">
               <label
-                htmlFor="password"
+                htmlFor="reg-password"
                 className="text-sm font-medium text-foreground"
               >
                 Password
               </label>
               <div className="relative">
                 <Input
-                  id="password"
+                  id="reg-password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
+                  placeholder="Choose a password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  autoComplete="current-password"
+                  autoComplete="new-password"
                   className="h-10 px-3 pr-10"
                 />
                 <button
@@ -143,6 +159,24 @@ export function LoginScreen({ onSwitchToRegister }: LoginScreenProps) {
                   )}
                 </button>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <label
+                htmlFor="reg-confirm"
+                className="text-sm font-medium text-foreground"
+              >
+                Confirm Password
+              </label>
+              <Input
+                id="reg-confirm"
+                type={showPassword ? "text" : "password"}
+                placeholder="Repeat your password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                autoComplete="new-password"
+                className="h-10 px-3"
+              />
             </div>
 
             {/* ── Error ── */}
@@ -184,27 +218,25 @@ export function LoginScreen({ onSwitchToRegister }: LoginScreenProps) {
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                     />
                   </svg>
-                  Signing in…
+                  Creating account…
                 </span>
               ) : (
-                "Sign in"
+                "Create account"
               )}
             </Button>
           </form>
 
-          {/* ── Switch to register ── */}
-          {onSwitchToRegister && (
-            <p className="mt-6 text-center text-sm text-muted-foreground">
-              Don&apos;t have an account?{" "}
-              <button
-                type="button"
-                onClick={onSwitchToRegister}
-                className="font-medium text-primary hover:underline cursor-pointer"
-              >
-                Create one
-              </button>
-            </p>
-          )}
+          {/* ── Switch to login ── */}
+          <p className="mt-6 text-center text-sm text-muted-foreground">
+            Already have an account?{" "}
+            <button
+              type="button"
+              onClick={onSwitchToLogin}
+              className="font-medium text-primary hover:underline cursor-pointer"
+            >
+              Sign in
+            </button>
+          </p>
         </div>
       </div>
     </div>

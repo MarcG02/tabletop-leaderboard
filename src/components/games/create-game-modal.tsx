@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { X, Loader2 } from "lucide-react"
 import { createGame } from "@/lib/api"
+import { getStoredToken } from "@/lib/auth-store"
 
 interface CreateGameModalProps {
   open: boolean
@@ -68,7 +69,8 @@ function CreateGameModalInner({
     setError(null)
 
     try {
-      await createGame(trimmed)
+      const token = getStoredToken()
+      await createGame(trimmed, token ?? undefined)
       onGameCreated()
       onClose()
     } catch (err) {

@@ -7,11 +7,14 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
+import { loginApi, registerApi } from "@/lib/api";
+import type { StoredAuth } from "@/lib/auth-store";
 
 const STORAGE_KEY = "tabletop-tally-auth";
 
 type User = {
-  username: string;
+  id: number;
+  name: string;
 };
 
 type AuthContextValue = {
@@ -20,14 +23,15 @@ type AuthContextValue = {
   login: (
     username: string,
     password: string,
-  ) => { success: boolean; error?: string };
+  ) => Promise<{ success: boolean; error?: string }>;
+  register: (
+    username: string,
+    password: string,
+  ) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
-
-const VALID_USERNAME = process.env.NEXT_PUBLIC_VALID_USERNAME || "";
-const VALID_PASSWORD = process.env.NEXT_PUBLIC_VALID_PASSWORD || "";
 
 // ── External store (localStorage) ──────────────────────────
 
@@ -48,56 +52,107 @@ function subscribe(callback: () => void): () => void {
   return () => window.removeEventListener("storage", callback);
 }
 
-function parseUser(raw: string | null): User | null {
+function parseStoredAuth(raw: string | null): StoredAuth | null {
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw);
-    if (parsed?.username) return { username: parsed.username };
+    if (parsed?.token && parsed?.player?.id && parsed?.player?.name) {
+      return parsed as StoredAuth;
+    }
   } catch {
     // Corrupt data — ignore
   }
   return null;
 }
 
+// ── Helpers ────────────────────────────────────────────────
+
+function persistAuth(auth: StoredAuth): void {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(auth));
+  // Notify same-tab subscription
+  window.dispatchEvent(new StorageEvent("storage", { key: STORAGE_KEY }));
+}
+
+function clearAuth(): void {
+  localStorage.removeItem(STORAGE_KEY);
+  window.dispatchEvent(new StorageEvent("storage", { key: STORAGE_KEY }));
+}
+
 // ── Provider ───────────────────────────────────────────────
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const raw = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-  const user = parseUser(raw);
-  const isAuthenticated = user !== null;
+  const auth = parseStoredAuth(raw);
+
+  const user: User | null = auth ? { id: auth.player.id, name: auth.player.name } : null;
+  const isAuthenticated = auth !== null;
 
   const login = useCallback(
-    (
+    async (
       username: string,
       password: string,
-    ): { success: boolean; error?: string } => {
+    ): Promise<{ success: boolean; error?: string }> => {
       if (!username.trim() || !password.trim()) {
         return { success: false, error: "Both fields are required." };
       }
 
-      if (username.trim() !== VALID_USERNAME || password !== VALID_PASSWORD) {
-        return { success: false, error: "Invalid username or password." };
+      try {
+        const result = await loginApi({
+          name: username.trim(),
+          password,
+        });
+
+        persistAuth({
+          token: result.token,
+          player: { id: result.player.id, name: result.player.name },
+        });
+
+        return { success: true };
+      } catch (err) {
+        const msg =
+          err instanceof Error ? err.message : "Invalid username or password.";
+        return { success: false, error: msg };
+      }
+    },
+    [],
+  );
+
+  const register = useCallback(
+    async (
+      username: string,
+      password: string,
+    ): Promise<{ success: boolean; error?: string }> => {
+      if (!username.trim() || !password.trim()) {
+        return { success: false, error: "Both fields are required." };
       }
 
-      const u: User = { username: username.trim() };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
+      try {
+        const result = await registerApi({
+          name: username.trim(),
+          password,
+        });
 
-      // Notify the same-tab subscription
-      window.dispatchEvent(new StorageEvent("storage", { key: STORAGE_KEY }));
+        persistAuth({
+          token: result.token,
+          player: { id: result.player.id, name: result.player.name },
+        });
 
-      return { success: true };
+        return { success: true };
+      } catch (err) {
+        const msg =
+          err instanceof Error ? err.message : "Registration failed.";
+        return { success: false, error: msg };
+      }
     },
     [],
   );
 
   const logout = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
-
-    window.dispatchEvent(new StorageEvent("storage", { key: STORAGE_KEY }));
+    clearAuth();
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

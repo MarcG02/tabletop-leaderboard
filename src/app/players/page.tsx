@@ -7,6 +7,7 @@ import { CreatePlayerModal } from "@/components/players/create-player-modal"
 import { BottomNav } from "@/components/layout/bottom-nav"
 import { usePlayers } from "@/hooks/use-players"
 import { deletePlayer } from "@/lib/api"
+import { getStoredToken } from "@/lib/auth-store"
 
 export default function PlayersPage() {
   const { players, isLoading, error, refetch } = usePlayers()
@@ -17,7 +18,8 @@ export default function PlayersPage() {
   const handleDeletePlayer = useCallback(
     async (id: number) => {
       try {
-        await deletePlayer(id)
+        const token = getStoredToken()
+        await deletePlayer(id, token ?? undefined)
         refetch()
       } catch (err) {
         console.error("Failed to delete player:", err)

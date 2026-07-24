@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { X, Loader2 } from "lucide-react"
 import { createPlayer } from "@/lib/api"
+import { getStoredToken } from "@/lib/auth-store"
 
 interface CreatePlayerModalProps {
   open: boolean
@@ -68,7 +69,8 @@ function CreatePlayerModalInner({
     setError(null)
 
     try {
-      await createPlayer(trimmed)
+      const token = getStoredToken()
+      await createPlayer(trimmed, token ?? undefined)
       onPlayerChange()
       onClose()
     } catch (err) {
