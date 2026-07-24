@@ -6,6 +6,8 @@ import { SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { TopAppBar } from "@/components/layout/top-app-bar"
 import { ThemeProvider } from "@/hooks/use-theme"
+import { AuthProvider } from "@/hooks/use-auth"
+import { AuthGuard } from "@/components/auth/auth-guard"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
 
@@ -52,15 +54,19 @@ export default function RootLayout({
       )}
     >
       <body className="min-h-full">
-        <ThemeProvider>
-          <SidebarProvider defaultOpen={true}>
-            <AppSidebar />
-            <main className="flex flex-1 flex-col bg-background">
-              <TopAppBar />
-              {children}
-            </main>
-          </SidebarProvider>
-        </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            <AuthGuard>
+              <SidebarProvider defaultOpen={true}>
+                <AppSidebar />
+                <main className="flex flex-1 flex-col bg-background">
+                  <TopAppBar />
+                  {children}
+                </main>
+              </SidebarProvider>
+            </AuthGuard>
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   )

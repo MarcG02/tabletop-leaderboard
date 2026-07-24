@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Bell, Settings, Menu, Sun, Moon } from "lucide-react";
-import Image from "next/image";
+import { Search, Bell, Settings, Menu, Sun, Moon, LogOut } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useTheme } from "@/hooks/use-theme";
+import { useAuth } from "@/hooks/use-auth";
 
 const TITLE_MAP: Record<string, string> = {
   "/": "Leaderboard",
@@ -18,6 +18,7 @@ export function TopAppBar() {
   const [showSettings, setShowSettings] = useState(false);
   const { toggleSidebar } = useSidebar();
   const { theme, setTheme } = useTheme();
+  const { logout } = useAuth();
   const pathname = usePathname();
   const title = TITLE_MAP[pathname] ?? "Tabletop Tally";
 
@@ -97,6 +98,17 @@ export function TopAppBar() {
                   >
                     <Moon className="size-4" />
                     Dark mode
+                  </button>
+                  <div className="h-px bg-border mx-3 my-1" />
+                  <button
+                    onClick={() => {
+                      logout();
+                      setShowSettings(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10 rounded-lg transition-colors cursor-pointer"
+                  >
+                    <LogOut className="size-4" />
+                    Sign out
                   </button>
                 </div>
               </>
