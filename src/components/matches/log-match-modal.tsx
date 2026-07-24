@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { X, Loader2 } from "lucide-react"
 import { createMatch, getPlayers, getGames, createGame } from "@/lib/api"
 import { PlayerAvatar } from "@/components/players/player-avatar"
-import type { PlayerOut, GameOut } from "@/lib/api"
+import type { PlayerOut, GameOut } from "@/lib/types"
 
 interface LogMatchModalProps {
   open: boolean
