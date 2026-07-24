@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect, startTransition } from "react"
 import { Trophy, Medal, Award, Users, Gamepad2, TrendingUp, Star, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
+import { toast } from "sonner"
 import { Skeleton } from "@/components/ui/skeleton"
 import { BottomNav } from "@/components/layout/bottom-nav"
 import { PlayerAvatar } from "@/components/players/player-avatar"
@@ -83,15 +84,13 @@ export default function LeaderboardPage() {
   const pageStart = (page - 1) * ITEMS_PER_PAGE + 1
   const pageEnd = Math.min(page * ITEMS_PER_PAGE, sorted.length)
 
+  useEffect(() => {
+    if (error) startTransition(() => { toast.error(error); });
+  }, [error]);
+
   return (
     <>
       <div className="flex-1 bg-dot-pattern px-4 sm:px-6 py-6 md:py-8 pb-28 md:pb-8 max-w-7xl mx-auto w-full">
-        {error && (
-          <div className="mb-6 p-4 bg-destructive/10 border border-destructive/30 rounded-xl text-destructive text-sm">
-            {error}
-          </div>
-        )}
-
         {/* ── Spotlight Top 3 ────────────────────────────── */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 items-end pt-8 mb-12">
           {isLoading ? (

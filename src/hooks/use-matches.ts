@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import type { Match } from "@/data/matches"
 import { getMatches } from "@/lib/api"
+import { getErrorMessage } from "@/lib/api-error"
 import { getStoredToken } from "@/lib/auth-store"
 
 type UseMatchesReturn = {
@@ -41,7 +42,7 @@ export function useMatches(): UseMatchesReturn {
         setError(null)
       } catch (err) {
         if (cancelled) return
-        setError(err instanceof Error ? err.message : "Failed to fetch matches")
+        setError(getErrorMessage(err, "Failed to fetch matches"))
       } finally {
         if (!cancelled) setIsLoading(false)
       }

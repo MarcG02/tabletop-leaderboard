@@ -1,10 +1,12 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect, startTransition } from "react"
+import { toast } from "sonner"
 import { GameGrid } from "@/components/games/game-grid"
 import { CreateGameModal } from "@/components/games/create-game-modal"
 import { BottomNav } from "@/components/layout/bottom-nav"
 import { useGames } from "@/hooks/use-games"
+import { getErrorMessage } from "@/lib/api-error"
 
 export default function GamesPage() {
   const { games, isLoading, error, refetch, deleteGameById } = useGames()
@@ -17,21 +19,19 @@ export default function GamesPage() {
       try {
         await deleteGameById(id)
       } catch (err) {
-        console.error("Failed to delete game:", err)
+        toast.error(getErrorMessage(err, "Failed to delete game"))
       }
     },
     [deleteGameById],
   )
 
+  useEffect(() => {
+    if (error) startTransition(() => { toast.error(error); });
+  }, [error]);
+
   return (
     <>
       <div className="flex-1 bg-dot-pattern px-4 sm:px-6 py-6 md:py-8 pb-28 md:pb-8 max-w-7xl mx-auto w-full">
-        {error && (
-          <div className="mb-6 p-4 bg-destructive/10 border border-destructive/30 rounded-xl text-destructive text-sm">
-            {error}
-          </div>
-        )}
-
         <GameGrid
           games={games}
           isLoading={isLoading}

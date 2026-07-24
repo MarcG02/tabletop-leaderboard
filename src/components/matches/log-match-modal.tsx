@@ -2,7 +2,9 @@
 
 import { useEffect, useRef, useState } from "react"
 import { X, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 import { createMatch, getPlayers, getGames, createGame } from "@/lib/api"
+import { getErrorMessage } from "@/lib/api-error"
 import { getStoredToken } from "@/lib/auth-store"
 import { PlayerAvatar } from "@/components/players/player-avatar"
 import type { PlayerOut, GameOut } from "@/lib/types"
@@ -32,7 +34,6 @@ export function LogMatchModal({
   const [playerIds, setPlayerIds] = useState<number[]>([])
   const [winnerId, setWinnerId] = useState<number | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [players, setPlayers] = useState<PlayerOut[]>([])
   const [playersLoading, setPlayersLoading] = useState(true)
 
@@ -50,7 +51,7 @@ export function LogMatchModal({
         setGames(gamesData)
         setPlayers(playersData)
       })
-      .catch(() => setError("Failed to load data"))
+      .catch(() => toast.error("Failed to load data"))
       .finally(() => {
         setGamesLoading(false)
         setPlayersLoading(false)
@@ -105,27 +106,26 @@ export function LogMatchModal({
 
     if (selectedGameId === "new") {
       if (!newGameName.trim()) {
-        setError("Enter a name for the new game.")
+        toast.error("Enter a name for the new game.")
         return
       }
     } else if (selectedGameId) {
       gameId = selectedGameId
     } else {
-      setError("Select a game or create a new one.")
+      toast.error("Select a game or create a new one.")
       return
     }
 
     if (playerIds.length < 2) {
-      setError("Select at least 2 participants.")
+      toast.error("Select at least 2 participants.")
       return
     }
     if (winnerId === null) {
-      setError("Select a winner.")
+      toast.error("Select a winner.")
       return
     }
 
     setIsSubmitting(true)
-    setError(null)
 
     try {
       const token = getStoredToken()
@@ -146,9 +146,7 @@ export function LogMatchModal({
       onMatchCreated()
       onClose()
     } catch (err) {
-      const msg =
-        err instanceof Error ? err.message : "Failed to create match."
-      setError(msg)
+      toast.error(getErrorMessage(err, "Failed to create match."))
     } finally {
       setIsSubmitting(false)
     }
@@ -185,13 +183,6 @@ export function LogMatchModal({
               <X className="size-7" />
             </button>
           </div>
-
-          {/* Error */}
-          {error && (
-            <div className="mb-6 p-3 bg-destructive/10 border border-destructive/30 rounded-lg text-destructive text-sm">
-              {error}
-            </div>
-          )}
 
           {/* Form */}
           <form className="space-y-6" onSubmit={handleSubmit}>

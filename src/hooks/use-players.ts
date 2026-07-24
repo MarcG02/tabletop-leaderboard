@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import type { Player } from "@/data/players"
 import { getPlayers, getLeaderboard } from "@/lib/api"
+import { getErrorMessage } from "@/lib/api-error"
 import { getStoredToken } from "@/lib/auth-store"
 
 type UsePlayersReturn = {
@@ -56,9 +57,7 @@ export function usePlayers(): UsePlayersReturn {
         setError(null)
       } catch (err) {
         if (cancelled) return
-        const msg =
-          err instanceof Error ? err.message : "Failed to fetch player data"
-        setError(msg)
+        setError(getErrorMessage(err, "Failed to fetch player data"))
       } finally {
         if (!cancelled) setIsLoading(false)
       }

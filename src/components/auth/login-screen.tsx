@@ -2,11 +2,11 @@
 
 import { type FormEvent, useState } from "react";
 import { Trophy, Eye, EyeOff } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
-import { cn } from "@/lib/utils";
 
 type LoginScreenProps = {
   onSwitchToRegister?: () => void;
@@ -18,17 +18,15 @@ export function LoginScreen({ onSwitchToRegister }: LoginScreenProps) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setError(null);
     setLoading(true);
 
     const result = await login(username, password);
     if (!result.success) {
-      setError(result.error ?? "Invalid credentials");
+      toast.error(result.error ?? "Invalid credentials");
     }
     setLoading(false);
   }
@@ -143,17 +141,6 @@ export function LoginScreen({ onSwitchToRegister }: LoginScreenProps) {
                   )}
                 </button>
               </div>
-            </div>
-
-            {/* ── Error ── */}
-            <div
-              className={cn(
-                "text-sm text-destructive transition-all overflow-hidden",
-                error ? "max-h-10 opacity-100" : "max-h-0 opacity-0",
-              )}
-              role="alert"
-            >
-              {error}
             </div>
 
             {/* ── Submit ── */}

@@ -2,11 +2,11 @@
 
 import { type FormEvent, useState } from "react";
 import { Trophy, Eye, EyeOff, UserPlus } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
-import { cn } from "@/lib/utils";
 
 type RegisterScreenProps = {
   onSwitchToLogin: () => void;
@@ -19,25 +19,23 @@ export function RegisterScreen({ onSwitchToLogin }: RegisterScreenProps) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setError(null);
 
     if (!username.trim() || !password.trim() || !confirmPassword.trim()) {
-      setError("All fields are required.");
+      toast.error("All fields are required.");
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      toast.error("Passwords do not match.");
       return;
     }
 
     if (password.length < 4) {
-      setError("Password must be at least 4 characters.");
+      toast.error("Password must be at least 4 characters.");
       return;
     }
 
@@ -45,7 +43,7 @@ export function RegisterScreen({ onSwitchToLogin }: RegisterScreenProps) {
 
     const result = await register(username, password);
     if (!result.success) {
-      setError(result.error ?? "Registration failed.");
+      toast.error(result.error ?? "Registration failed.");
     }
     setLoading(false);
   }
@@ -177,17 +175,6 @@ export function RegisterScreen({ onSwitchToLogin }: RegisterScreenProps) {
                 autoComplete="new-password"
                 className="h-10 px-3"
               />
-            </div>
-
-            {/* ── Error ── */}
-            <div
-              className={cn(
-                "text-sm text-destructive transition-all overflow-hidden",
-                error ? "max-h-10 opacity-100" : "max-h-0 opacity-0",
-              )}
-              role="alert"
-            >
-              {error}
             </div>
 
             {/* ── Submit ── */}

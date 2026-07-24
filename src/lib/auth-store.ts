@@ -19,3 +19,9 @@ export function getStoredAuth(): StoredAuth | null {
 export function getStoredToken(): string | null {
   return getStoredAuth()?.token ?? null;
 }
+
+export function clearAuth(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(STORAGE_KEY);
+  window.dispatchEvent(new StorageEvent("storage", { key: STORAGE_KEY }));
+}

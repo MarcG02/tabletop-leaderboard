@@ -4,17 +4,15 @@ import { UserPlus, Loader2 } from "lucide-react";
 import type { Player } from "@/data/players";
 import { PlayerCard } from "@/components/players/player-card";
 
-interface PlayerGridProps {
+type PlayerGridProps = {
   players: Player[];
   isLoading: boolean;
-  onAddPlayer: () => void;
   onDeletePlayer: (id: number) => void;
-}
+};
 
 export function PlayerGrid({
   players,
   isLoading,
-  onAddPlayer,
   onDeletePlayer,
 }: PlayerGridProps) {
   return (
@@ -29,13 +27,6 @@ export function PlayerGrid({
             Edit profiles and monitor individual performance metrics.
           </p>
         </div>
-        <button
-          onClick={onAddPlayer}
-          className="cursor-pointer inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-xl font-medium hover:opacity-90 active:scale-95 transition-all shadow-lg"
-        >
-          <UserPlus className="size-5" />
-          Create Player
-        </button>
       </div>
 
       {/* Player Cards Grid */}

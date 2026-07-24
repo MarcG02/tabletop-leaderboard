@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { loginApi, registerApi } from "@/lib/api";
+import { getErrorMessage } from "@/lib/api-error";
 import type { StoredAuth } from "@/lib/auth-store";
 
 const STORAGE_KEY = "tabletop-tally-auth";
@@ -109,9 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         return { success: true };
       } catch (err) {
-        const msg =
-          err instanceof Error ? err.message : "Invalid username or password.";
-        return { success: false, error: msg };
+        return { success: false, error: getErrorMessage(err, "Invalid username or password.") };
       }
     },
     [],
@@ -139,9 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         return { success: true };
       } catch (err) {
-        const msg =
-          err instanceof Error ? err.message : "Registration failed.";
-        return { success: false, error: msg };
+        return { success: false, error: getErrorMessage(err, "Registration failed.") };
       }
     },
     [],

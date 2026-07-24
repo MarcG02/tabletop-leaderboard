@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, startTransition } from "react"
+import { toast } from "sonner"
 import { useMatches } from "@/hooks/use-matches"
 import { MatchesFilters } from "@/components/matches/matches-filters"
 import { MatchesTable } from "@/components/matches/matches-table"
@@ -21,7 +22,7 @@ export default function MatchesPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (params.get("logMatch") === "true") {
-      setLogMatchOpen(true)
+      startTransition(() => setLogMatchOpen(true))
       window.history.replaceState({}, "", "/matches")
     }
   }, [])
@@ -52,15 +53,13 @@ export default function MatchesPage() {
     setPage(1)
   }
 
+  useEffect(() => {
+    if (error) startTransition(() => { toast.error(error); });
+  }, [error]);
+
   return (
     <>
       <div className="flex-1 bg-dot-pattern px-4 sm:px-6 py-6 md:py-8 pb-28 md:pb-8 max-w-7xl mx-auto w-full space-y-8 md:space-y-12">
-        {error && (
-          <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-xl text-destructive text-sm">
-            {error}
-          </div>
-        )}
-
         <MatchesFilters
           games={games}
           onFiltersChange={handleFiltersChange}

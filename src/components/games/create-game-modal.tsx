@@ -2,7 +2,9 @@
 
 import { useEffect, useRef, useState } from "react"
 import { X, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 import { createGame } from "@/lib/api"
+import { getErrorMessage } from "@/lib/api-error"
 import { getStoredToken } from "@/lib/auth-store"
 
 interface CreateGameModalProps {
@@ -37,7 +39,6 @@ function CreateGameModalInner({
   const inputRef = useRef<HTMLInputElement>(null)
   const [name, setName] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   // Handle escape key
   useEffect(() => {
@@ -61,12 +62,11 @@ function CreateGameModalInner({
     e.preventDefault()
     const trimmed = name.trim()
     if (!trimmed) {
-      setError("Game name is required.")
+      toast.error("Game name is required.")
       return
     }
 
     setIsSubmitting(true)
-    setError(null)
 
     try {
       const token = getStoredToken()
@@ -74,9 +74,7 @@ function CreateGameModalInner({
       onGameCreated()
       onClose()
     } catch (err) {
-      const msg =
-        err instanceof Error ? err.message : "Failed to create game."
-      setError(msg)
+      toast.error(getErrorMessage(err, "Failed to create game."))
     } finally {
       setIsSubmitting(false)
     }
@@ -109,13 +107,6 @@ function CreateGameModalInner({
               <X className="size-7" />
             </button>
           </div>
-
-          {/* Error */}
-          {error && (
-            <div className="mb-6 p-3 bg-destructive/10 border border-destructive/30 rounded-lg text-destructive text-sm">
-              {error}
-            </div>
-          )}
 
           {/* Form */}
           <form className="space-y-6" onSubmit={handleSubmit}>

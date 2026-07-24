@@ -10,17 +10,9 @@ import {
   PlayerRegister,
   TokenOut,
 } from "./types";
+import { ApiError, extractApiDetail } from "./api-error";
 
 const API_BASE = process.env.API_BASE || "";
-
-class ApiError extends Error {
-  status: number;
-  constructor(message: string, status: number) {
-    super(message);
-    this.name = "ApiError";
-    this.status = status;
-  }
-}
 
 type RequestOptions = RequestInit & { token?: string };
 
@@ -85,8 +77,19 @@ export async function createPlayer(name: string, token?: string): Promise<Player
   });
 }
 
-export async function deletePlayer(id: number, token?: string): Promise<void> {
-  return request<void>(`/players/${id}`, { method: "DELETE", token });
+export async function deletePlayer(
+  id: number,
+  token?: string,
+): Promise<{ ok: true } | { ok: false; error: string; status: number }> {
+  try {
+    await request<void>(`/players/${id}`, { method: "DELETE", token });
+    return { ok: true };
+  } catch (err) {
+    if (err instanceof ApiError) {
+      return { ok: false, error: extractApiDetail(err), status: err.status };
+    }
+    throw err; // non-ApiError still throws (network error, etc.)
+  }
 }
 
 // ── Games ─────────────────────────────────────────────
